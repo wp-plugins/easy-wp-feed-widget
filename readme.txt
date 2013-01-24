@@ -26,5 +26,8 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 
 == Changelog ==
 
+= 0.9.2 =
+Bugfix - use before_widget and before_title
+
 = 0.9.1 =
 First public version.

@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 0.9.1
+Version: 0.9.2
 Author URI: http://www.hultsfred.se
 */
 
@@ -127,17 +127,20 @@ Author URI: http://www.hultsfred.se
 		$options = get_option('hk_wp_feed_widget_' . $this->id);
 		
 		// check for new rss here every 30 minutes if no cron enabled
-		//if (!wp_next_scheduled( 'hk_wp_feed_event' ) && ($options["hk_wp_feed_check_time"] == "" || strtotime("+30 minutes",$options["hk_wp_feed_check_time"]) - time() < 0)) {
+		if (!wp_next_scheduled( 'hk_wp_feed_event' ) && ($options["hk_wp_feed_check_time"] == "" || strtotime("+30 minutes",$options["hk_wp_feed_check_time"]) - time() < 0)) {
 			hk_wp_feed_update($this->id);
-		//}
+		}
 		$showwp_feed = ($instance["show_wp_feed"] == "" || in_array(get_query_var("cat"), split(",",$instance["show_wp_feed"]))) && $options["hk_wp_feed"] != "";
 		if ($showwp_feed) : 
-			echo "<div id='wp_feedcontent'>";
-			if ($instance["title"] != "") {
-				echo "<h3>".$instance["title"]."</h3>";
+		
+			$title = apply_filters( 'widget_title', $instance['title'] );
+			
+			echo $before_widget;
+			if ( ! empty( $title ) ) {
+				echo $before_title . $title . $after_title;
 			}
 			echo $options["hk_wp_feed"];
-			echo "</div>";
+			echo $after_widget;
 		endif;
 
 	}
