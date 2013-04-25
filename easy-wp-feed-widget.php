@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 0.9.2
+Version: 0.9.3
 Author URI: http://www.hultsfred.se
 */
 
@@ -196,7 +196,7 @@ function hk_wp_feed_update($widgetid) {
 				}
 				$wp_feed .= "<div class='entry-wrapper$newclass'><span class='time'>".
 				hk_nicedate($time) . "</span><a title='" . $item->description
-				 . "' href='". $baseurl . $item->link
+				 . "' href='". $item->link
 				 . "' target='_blank'>" . $item->title
 				 . "</a></div>";
 			} 
