@@ -26,6 +26,9 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 
 == Changelog ==
 
+= 0.9.4 =
+Bugfix - spelling
+
 = 0.9.3 =
 Bugfix - item link fixed
 

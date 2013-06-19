@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 0.9.3
+Version: 0.9.4
 Author URI: http://www.hultsfred.se
 */
 
@@ -229,8 +229,8 @@ if (!function_exists("hk_nicedate")) {
 		$mo = array('januari' => 'January',
 				'februari' => 'February',
 				'mars' => 'March',
-				'april' => 'Aprli',
-				'maj' => 'Mey',
+				'april' => 'April',
+				'maj' => 'May',
 				'juni' => 'June',
 				'juli' => 'July',
 				'augusti' => 'August',
