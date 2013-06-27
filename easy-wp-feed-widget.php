@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 0.9.4
+Version: 0.9.5
 Author URI: http://www.hultsfred.se
 */
 
@@ -55,7 +55,7 @@ Author URI: http://www.hultsfred.se
 		?>
 		<p>
 		<label for="<?php echo $this->get_field_id( 'title' ); ?>">Widget title</label> 
-		<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title); ?>" />
+		<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo $title; ?>" />
 		</p>
 		<p>
 		<label for="<?php echo $this->get_field_id( 'show_wp_feed' ); ?>">Show only in category (in format 23,42,19)</label> 
@@ -110,7 +110,7 @@ Author URI: http://www.hultsfred.se
 
 	public function update( $new_instance, $old_instance ) {
 		$instance['show_wp_feed'] = strip_tags( $new_instance['show_wp_feed'] );
-		$instance['title'] = strip_tags( $new_instance['title'] );
+		$instance['title'] = $new_instance['title'];
 		$instance['enable_cron'] = $new_instance['enable_cron'];
 
 		$options = get_option('hk_wp_feed_widget_' . $this->id);
@@ -133,7 +133,7 @@ Author URI: http://www.hultsfred.se
 		$showwp_feed = ($instance["show_wp_feed"] == "" || in_array(get_query_var("cat"), split(",",$instance["show_wp_feed"]))) && $options["hk_wp_feed"] != "";
 		if ($showwp_feed) : 
 		
-			$title = apply_filters( 'widget_title', $instance['title'] );
+			$title = $instance['title'];//apply_filters( 'widget_title', $instance['title'] );
 			
 			echo $before_widget;
 			if ( ! empty( $title ) ) {

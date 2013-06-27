@@ -26,6 +26,9 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 
 == Changelog ==
 
+= 0.9.5 =
+Allow html in title
+
 = 0.9.4 =
 Bugfix - spelling
 
