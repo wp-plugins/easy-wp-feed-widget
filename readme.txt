@@ -26,6 +26,12 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 
 == Changelog ==
 
+= 0.9.8 =
+Hide date setting added
+
+= 0.9.7 =
+Cron job now works
+
 = 0.9.6 =
 Added support for modified date (modDate) in RSS-feed.
 

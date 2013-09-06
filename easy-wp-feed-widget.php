@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 0.9.6
+Version: 0.9.8
 Author URI: http://www.hultsfred.se
 */
 
@@ -47,6 +47,7 @@ Author URI: http://www.hultsfred.se
 		if ( isset( $instance[ 'enable_cron' ] ) ) {	$enable_cron = $instance[ 'enable_cron' ];
 		} else { $enable_cron = ""; }
 		$options = get_option('hk_wp_feed_widget_' . $this->id);
+		$hide_date = strip_tags( $options['hide_date'] );
 		$hk_wp_feed_rss = strip_tags( $options['hk_wp_feed_rss'] );
 		$hk_wp_feed_days_new = strip_tags( $options['hk_wp_feed_days_new'] );
 		$hk_wp_feed_num = strip_tags( $options['hk_wp_feed_num'] );
@@ -72,6 +73,10 @@ Author URI: http://www.hultsfred.se
 		<p>
 		<label for="<?php echo $this->get_field_id( 'hk_wp_feed_days_new' ); ?>">Number of days an item is new.</label> 
 		<input class="widefat" id="<?php echo $this->get_field_id( 'hk_wp_feed_days_new' ); ?>" name="<?php echo $this->get_field_name( 'hk_wp_feed_days_new' ); ?>" type="text" value="<?php echo esc_attr( $hk_wp_feed_days_new); ?>" />
+		</p>
+		<p>
+		<input type="checkbox" id="<?php echo $this->get_field_id( 'hide_date' ); ?>" name="<?php echo $this->get_field_name( 'hide_date' ); ?>" value="1"<?php checked( 1 == $hide_date ); ?> /> 
+		<label for="<?php echo $this->get_field_id( 'hide_date' ); ?>">Hide dates</label>
 		</p>
 		<p>
 		<input type="checkbox" id="<?php echo $this->get_field_id( 'enable_cron' ); ?>" name="<?php echo $this->get_field_name( 'enable_cron' ); ?>" value="1"<?php checked( 1 == $enable_cron ); ?> /> 
@@ -117,6 +122,7 @@ Author URI: http://www.hultsfred.se
 		$options["hk_wp_feed_rss"] = strip_tags( $new_instance['hk_wp_feed_rss'] );
 		$options["hk_wp_feed_days_new"] = strip_tags( $new_instance['hk_wp_feed_days_new'] );
 		$options["hk_wp_feed_num"] = strip_tags( $new_instance['hk_wp_feed_num'] );
+		$options["hide_date"] = $new_instance['hide_date'];
 		update_option("hk_wp_feed_widget_" . $this->id, $options);
 
 		return $instance;
@@ -157,9 +163,7 @@ function hk_wp_feed() {
 	global $wp_registered_widgets;
 	foreach($wp_registered_widgets as $widget) {
 		if ($widget["classname"] == "widget_hk_wp_feed_rss_widget") {
-			echo $widget["id"] . "<br>";
-			echo $widget["classname"] . "<br><br>";
-			hk_wp_feed_update($widgetid);
+			hk_wp_feed_update($widget["id"]);
 		}
 	}
 }
@@ -171,6 +175,7 @@ function hk_wp_feed_update($widgetid) {
 	
 	$hk_wp_feed_days_new  = ($options["hk_wp_feed_days_new"] != "")?$options["hk_wp_feed_days_new"]:"1";
 	$hk_wp_feed_num  = ($options["hk_wp_feed_num"] != "")?$options["hk_wp_feed_num"]:"10";
+	$hide_date  = ($options["hide_date"] != "")?true:false;
 	
 	$log = "Ingen wp_feed kollad.";
 	$wp_feed = "";
@@ -185,6 +190,8 @@ function hk_wp_feed_update($widgetid) {
 			$baseurl = $rss->channel->link;
 			$newrsstime = strtotime("-" . $hk_wp_feed_days_new . " days");
 			$count = 0;
+			$hide_date_class = ($hide_date)?"hide_date":"";
+			$wp_feed .= "<div class='content-wrapper $hide_date_class'>";
 			foreach ($rss->channel->item as $item)
 			{
 				if ($hk_wp_feed_num <= $count++) break;
@@ -204,15 +211,19 @@ function hk_wp_feed_update($widgetid) {
 					$has_new = "true";
 					$newclass = " isnew";
 				}
-				$wp_feed .= "<div class='entry-wrapper$newclass'><span class='time'>".
-				hk_nicedate($time) . "</span><a title='" . $item->description
+				$wp_feed .= "<div class='entry-wrapper$newclass'>";
+				if (!$hide_date) {
+					$wp_feed .= "<span class='time'>".hk_nicedate($time) . "</span>";
+				}
+				$wp_feed .= "<a title='" . $item->description
 				 . "' href='". $item->link
 				 . "' target='_blank'>" . $item->title
 				 . "</a>";
-				if ($nice_modtime != "" && $nice_modtime != $nice_time ) 
+				if (!$hide_date && $nice_modtime != "" && $nice_modtime != $nice_time ) 
 					$wp_feed .= "<span class='modified time'>Uppdaterad $nice_modtime</span>";
 				$wp_feed .= "</div>";
 			} 
+			$wp_feed .= "</div>";
 		}	
 	endif;
 	$options["hk_wp_feed_log"] = $log;
