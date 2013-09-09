@@ -26,6 +26,9 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 
 == Changelog ==
 
+= 0.9.9 =
+Hide date changed and horizontal class setting added
+
 = 0.9.8 =
 Hide date setting added
 
