@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 0.9.9
+Version: 1.0
 Author URI: http://www.hultsfred.se
 */
 
@@ -53,7 +53,10 @@ Author URI: http://www.hultsfred.se
 		$hk_wp_feed_rss = strip_tags( $options['hk_wp_feed_rss'] );
 		$hk_wp_feed_days_new = strip_tags( $options['hk_wp_feed_days_new'] );
 		$hk_wp_feed_num = strip_tags( $options['hk_wp_feed_num'] );
-
+		$hk_wp_feed_more_text = $options['hk_wp_feed_more_text'];
+		$hk_wp_feed_more_link = strip_tags( $options['hk_wp_feed_more_link'] );
+		$hk_wp_feed_show_num_new = $options['hk_wp_feed_show_num_new'];
+		
 		
 		?>
 		<p>
@@ -91,6 +94,18 @@ Author URI: http://www.hultsfred.se
 		<p>
 		<input type="checkbox" id="<?php echo $this->get_field_id( 'enable_cron' ); ?>" name="<?php echo $this->get_field_name( 'enable_cron' ); ?>" value="1"<?php checked( 1 == $enable_cron ); ?> /> 
 		<label for="<?php echo $this->get_field_id( 'enable_cron' ); ?>">Use cron to generate cache every quarter</label>
+		</p>
+		<p>
+		<label for="<?php echo $this->get_field_id( 'hk_wp_feed_show_num_new' ); ?>" title="">Show subtitle, first line = one in feed, second line = two in feed ... last line = if more in feed (replaces [nr] with number items in feed)</label> 
+		<textarea class="widefat" id="<?php echo $this->get_field_id( 'hk_wp_feed_show_num_new' ); ?>" name="<?php echo $this->get_field_name( 'hk_wp_feed_show_num_new' ); ?>"><?php echo $hk_wp_feed_show_num_new; ?></textarea>
+		</p>
+		<p>
+		<label for="<?php echo $this->get_field_id( 'hk_wp_feed_more_text' ); ?>">Show more link text.</label> 
+		<input class="widefat" id="<?php echo $this->get_field_id( 'hk_wp_feed_more_text' ); ?>" name="<?php echo $this->get_field_name( 'hk_wp_feed_more_text' ); ?>" type="text" value="<?php echo esc_attr( $hk_wp_feed_more_text); ?>" />
+		</p>
+		<p>
+		<label for="<?php echo $this->get_field_id( 'hk_wp_feed_more_link' ); ?>">Show more link.</label> 
+		<input class="widefat" id="<?php echo $this->get_field_id( 'hk_wp_feed_more_link' ); ?>" name="<?php echo $this->get_field_name( 'hk_wp_feed_more_link' ); ?>" type="text" value="<?php echo esc_attr( $hk_wp_feed_more_link); ?>" />
 		</p>
 		<?php
 		if ($enable_cron) {
@@ -132,11 +147,18 @@ Author URI: http://www.hultsfred.se
 		$options["hk_wp_feed_rss"] = strip_tags( $new_instance['hk_wp_feed_rss'] );
 		$options["hk_wp_feed_days_new"] = strip_tags( $new_instance['hk_wp_feed_days_new'] );
 		$options["hk_wp_feed_num"] = strip_tags( $new_instance['hk_wp_feed_num'] );
+		$options["hk_wp_feed_more_text"] = $new_instance['hk_wp_feed_more_text'];
+		$options["hk_wp_feed_more_link"] = strip_tags( $new_instance['hk_wp_feed_more_link'] );
+		$options["hk_wp_feed_show_num_new"] = $new_instance['hk_wp_feed_show_num_new'];
 		$options["horizontal"] = $new_instance['horizontal'];
 		$options["hide_date"] = $new_instance['hide_date'];
 		$options["hide_updated_date"] = $new_instance['hide_updated_date'];
+
 		update_option("hk_wp_feed_widget_" . $this->id, $options);
 
+		/* regenerate cache */
+		hk_wp_feed();
+		
 		return $instance;
 	}
 
@@ -189,8 +211,13 @@ function hk_wp_feed_update($widgetid) {
 	$hk_wp_feed_check_time = time();
 	$options["hk_wp_feed_check_time"] = $hk_wp_feed_check_time;
 	
-	$hk_wp_feed_days_new  = ($options["hk_wp_feed_days_new"] != "")?$options["hk_wp_feed_days_new"]:"1";
-	$hk_wp_feed_num  = ($options["hk_wp_feed_num"] != "")?$options["hk_wp_feed_num"]:"10";
+	$hk_wp_feed_days_new = ($options["hk_wp_feed_days_new"] != "")?$options["hk_wp_feed_days_new"]:"1";
+	$hk_wp_feed_num = ($options["hk_wp_feed_num"] != "")?$options["hk_wp_feed_num"]:"10";
+	$hk_wp_feed_more_text = ($options["hk_wp_feed_more_text"] != "")?$options["hk_wp_feed_more_text"]:"";
+	$hk_wp_feed_more_link = ($options["hk_wp_feed_more_link"] != "")?$options["hk_wp_feed_more_link"]:"";
+	$hk_wp_feed_show_num_new = ($options["hk_wp_feed_show_num_new"] != "")?$options["hk_wp_feed_show_num_new"]:"";
+	
+	
 	$hide_updated_date  = ($options["hide_updated_date"] != "")?true:false;
 	$hide_date  = ($options["hide_date"] != "")?true:false;
 	
@@ -204,6 +231,17 @@ function hk_wp_feed_update($widgetid) {
 		$has_new = "";
 		if (count($rss->channel->item) > 0 ) {
 			$log .= "<br>Found " . count($rss->channel->item) . " items in RSS feed.";
+			$num_new_text = explode("\n",$hk_wp_feed_show_num_new);
+			if (count($num_new_text)-1 >= count($rss->channel->item))
+				$available_feeds_text = $num_new_text[count($rss->channel->item)-1];
+			else if (count($num_new_text)-1 < count($rss->channel->item))
+				$available_feeds_text = str_replace("[nr]",count($rss->channel->item),$num_new_text[count($num_new_text)-1]);
+			
+			if ($available_feeds_text != "") 
+			{
+				$wp_feed .= "<div class='sub-title'>$available_feeds_text</div>";
+			}
+
 			$baseurl = $rss->channel->link;
 			$newrsstime = strtotime("-" . $hk_wp_feed_days_new . " days");
 			$count = 0;
@@ -211,7 +249,13 @@ function hk_wp_feed_update($widgetid) {
 			$wp_feed .= "<div class='content-wrapper$hide_date_class'>";
 			foreach ($rss->channel->item as $item)
 			{
-				if ($hk_wp_feed_num <= $count++) break;
+				$if_hide_in_widget = "";
+				if ($hk_wp_feed_num <= $count) {
+					$if_hide_in_widget = " style='display:none;'";
+				}
+				else {
+					$count++;
+				}
 				$time = strtotime($item->pubDate);
 				$nice_time = hk_nicedate($time);
 				if (!empty($item->modDate)) {
@@ -228,7 +272,7 @@ function hk_wp_feed_update($widgetid) {
 					$has_new = "true";
 					$newclass = " isnew";
 				}
-				$wp_feed .= "<div class='entry-wrapper$newclass'>";
+				$wp_feed .= "<div class='entry-wrapper$newclass'$if_hide_in_widget>";
 				if (!$hide_date) {
 					$wp_feed .= "<span class='time'>".hk_nicedate($time) . "</span>";
 				}
@@ -240,6 +284,14 @@ function hk_wp_feed_update($widgetid) {
 					$wp_feed .= "<span class='modified time'>Uppdaterad $nice_modtime</span>";
 				$wp_feed .= "</div>";
 			} 
+			if (count($rss->channel->item) > $count && $hk_wp_feed_more_text != "" && $hk_wp_feed_more_link != "") {
+				$wp_feed .= "<div class='entry-wrapper'>";
+				$wp_feed .= "<a class='read-more-link' title='" . $hk_wp_feed_more_text
+				 . "' href='". $hk_wp_feed_more_link
+				 . "'>" . $hk_wp_feed_more_text
+				 . "</a>";
+				$wp_feed .= "</div>";
+			}
 			$wp_feed .= "</div>";
 		}	
 	endif;
