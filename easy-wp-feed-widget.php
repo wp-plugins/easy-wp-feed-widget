@@ -4,7 +4,7 @@ Plugin Name: Easy WP Feed Widget
 Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 1.0
+Version: 1.0.1
 Author URI: http://www.hultsfred.se
 */
 
@@ -171,6 +171,7 @@ Author URI: http://www.hultsfred.se
 		// check for new rss here every 30 minutes if no cron enabled
 		if (!wp_next_scheduled( 'hk_wp_feed_event' ) && ($options["hk_wp_feed_check_time"] == "" || strtotime("+30 minutes",$options["hk_wp_feed_check_time"]) - time() < 0)) {
 			hk_wp_feed_update($this->id);
+			$options = get_option('hk_wp_feed_widget_' . $this->id);
 		}
 		$showwp_feed = ($instance["show_wp_feed"] == "" || in_array(get_query_var("cat"), split(",",$instance["show_wp_feed"]))) && $options["hk_wp_feed"] != "";
 		if ($showwp_feed) : 
@@ -239,7 +240,13 @@ function hk_wp_feed_update($widgetid) {
 			
 			if ($available_feeds_text != "") 
 			{
-				$wp_feed .= "<div class='sub-title'>$available_feeds_text</div>";
+				$hk_wp_feed_more_link_pre = "";
+				$hk_wp_feed_more_link_post = "";
+				if ($hk_wp_feed_more_link != "") {
+					$hk_wp_feed_more_link_pre = "<a href='$hk_wp_feed_more_link'>";
+					$hk_wp_feed_more_link_post = "</a>";
+				}
+				$wp_feed .= "<div class='sub-title'>$hk_wp_feed_more_link_pre$available_feeds_text$hk_wp_feed_more_link_post</div>";
 			}
 
 			$baseurl = $rss->channel->link;

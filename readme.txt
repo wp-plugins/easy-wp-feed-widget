@@ -26,6 +26,9 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 
 == Changelog ==
 
+= 1.0.1 =
+Added link to "there are num in feed" if link exist.
+
 = 1.0 =
 Added settings to add show more link and number of elements in feed. Now also just hides elements if there are more then specified (to be able to make js-feed-rotations)
 
