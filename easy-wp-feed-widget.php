@@ -1,10 +1,10 @@
 <?php
 /*
 Plugin Name: Easy WP Feed Widget
-Plugin URI: http://wordpress.org/extend/plugins/easy-wp-feed-widget/
+Plugin URI: http://wordpress.org/plugins/easy-wp-feed-widget/
 Description: Wordpress widget to show a Wordpress feed.
 Author: Jonas Hjalmarsson, Hultsfreds kommun
-Version: 1.0.1
+Version: 1.2
 Author URI: http://www.hultsfred.se
 */
 
@@ -46,6 +46,10 @@ Author URI: http://www.hultsfred.se
 		} else { $show_wp_feed = ""; }
 		if ( isset( $instance[ 'enable_cron' ] ) ) {	$enable_cron = $instance[ 'enable_cron' ];
 		} else { $enable_cron = ""; }
+		if ( isset( $instance[ 'always_show_title' ] ) ) {	$always_show_title = $instance[ 'always_show_title' ];
+		} else { $always_show_title = ""; }
+		if ( isset( $instance[ 'no_content_text' ] ) ) {	$no_content_text = $instance[ 'no_content_text' ];
+		} else { $no_content_text = ""; }
 		$options = get_option('hk_wp_feed_widget_' . $this->id);
 		$horizontal = strip_tags( $options['horizontal'] );
 		$hide_date = strip_tags( $options['hide_date'] );
@@ -56,7 +60,7 @@ Author URI: http://www.hultsfred.se
 		$hk_wp_feed_more_text = $options['hk_wp_feed_more_text'];
 		$hk_wp_feed_more_link = strip_tags( $options['hk_wp_feed_more_link'] );
 		$hk_wp_feed_show_num_new = $options['hk_wp_feed_show_num_new'];
-		
+		$hk_fix_timezone = $options['hk_fix_timezone'];		
 		
 		?>
 		<p>
@@ -107,6 +111,20 @@ Author URI: http://www.hultsfred.se
 		<label for="<?php echo $this->get_field_id( 'hk_wp_feed_more_link' ); ?>">Show more link.</label> 
 		<input class="widefat" id="<?php echo $this->get_field_id( 'hk_wp_feed_more_link' ); ?>" name="<?php echo $this->get_field_name( 'hk_wp_feed_more_link' ); ?>" type="text" value="<?php echo esc_attr( $hk_wp_feed_more_link); ?>" />
 		</p>
+		<p>
+		<input type="checkbox" id="<?php echo $this->get_field_id( 'always_show_title' ); ?>" name="<?php echo $this->get_field_name( 'always_show_title' ); ?>" value="1"<?php checked( 1 == $always_show_title ); ?> /> 
+		<label for="<?php echo $this->get_field_id( 'always_show_title' ); ?>">Always show title</label>
+		</p>
+		<p>
+		<label for="<?php echo $this->get_field_id( 'no_content_text' ); ?>">Text when no content.</label> 
+		<input class="widefat" id="<?php echo $this->get_field_id( 'no_content_text' ); ?>" name="<?php echo $this->get_field_name( 'no_content_text' ); ?>" type="text" value="<?php echo esc_attr( $no_content_text); ?>" />
+		</p>
+		<p>
+		<input type="checkbox" id="<?php echo $this->get_field_id( 'hk_fix_timezone' ); ?>" name="<?php echo $this->get_field_name( 'hk_fix_timezone' ); ?>" value="1"<?php checked( 1 == $hk_fix_timezone ); ?> /> 
+		<label for="<?php echo $this->get_field_id( 'hk_fix_timezone' ); ?>">Ignore timezone</label>
+		</p>
+
+		
 		<?php
 		if ($enable_cron) {
 			if ($options['hk_wp_feed_rss'] != "") {
@@ -142,6 +160,8 @@ Author URI: http://www.hultsfred.se
 		$instance['show_wp_feed'] = strip_tags( $new_instance['show_wp_feed'] );
 		$instance['title'] = $new_instance['title'];
 		$instance['enable_cron'] = $new_instance['enable_cron'];
+		$instance["always_show_title"] = $new_instance['always_show_title'];
+		$instance["no_content_text"] = $new_instance['no_content_text'];
 
 		$options = get_option('hk_wp_feed_widget_' . $this->id);
 		$options["hk_wp_feed_rss"] = strip_tags( $new_instance['hk_wp_feed_rss'] );
@@ -153,6 +173,7 @@ Author URI: http://www.hultsfred.se
 		$options["horizontal"] = $new_instance['horizontal'];
 		$options["hide_date"] = $new_instance['hide_date'];
 		$options["hide_updated_date"] = $new_instance['hide_updated_date'];
+		$options["hk_fix_timezone"] = $new_instance['hk_fix_timezone'];
 
 		update_option("hk_wp_feed_widget_" . $this->id, $options);
 
@@ -166,16 +187,15 @@ Author URI: http://www.hultsfred.se
 	    extract( $args );
 		$options = get_option('hk_wp_feed_widget_' . $this->id);
 		$horizontal  = ($options["horizontal"] != "")?true:false;
-		
-		
+
 		// check for new rss here every 30 minutes if no cron enabled
 		if (!wp_next_scheduled( 'hk_wp_feed_event' ) && ($options["hk_wp_feed_check_time"] == "" || strtotime("+30 minutes",$options["hk_wp_feed_check_time"]) - time() < 0)) {
 			hk_wp_feed_update($this->id);
 			$options = get_option('hk_wp_feed_widget_' . $this->id);
 		}
 		$showwp_feed = ($instance["show_wp_feed"] == "" || in_array(get_query_var("cat"), split(",",$instance["show_wp_feed"]))) && $options["hk_wp_feed"] != "";
+		$showwp_feed_no_content = ($instance["show_wp_feed"] == "" || in_array(get_query_var("cat"), split(",",$instance["show_wp_feed"]))) && $instance["always_show_title"] != "";
 		if ($showwp_feed) : 
-		
 			$title = $instance['title'];//apply_filters( 'widget_title', $instance['title'] );
 			if ($horizontal) {
 				$before_widget = str_replace('class="','class="horizontal ',$before_widget);
@@ -186,6 +206,19 @@ Author URI: http://www.hultsfred.se
 			}
 			echo $options["hk_wp_feed"];
 			echo $after_widget;
+		elseif ($showwp_feed_no_content) :
+			$title = $instance['title'];//apply_filters( 'widget_title', $instance['title'] );
+			if ($horizontal) {
+				$before_widget = str_replace('class="','class="horizontal ',$before_widget);
+			}
+			echo $before_widget;
+			if ( ! empty( $title ) ) {
+				echo $before_title . $title . $after_title;
+				if ($instance["no_content_text"] != "") {
+					echo "<div class='sub-title'>".$instance["no_content_text"]."</div>";
+				}
+			}
+			echo $after_widget;			
 		endif;
 
 	}
@@ -217,6 +250,7 @@ function hk_wp_feed_update($widgetid) {
 	$hk_wp_feed_more_text = ($options["hk_wp_feed_more_text"] != "")?$options["hk_wp_feed_more_text"]:"";
 	$hk_wp_feed_more_link = ($options["hk_wp_feed_more_link"] != "")?$options["hk_wp_feed_more_link"]:"";
 	$hk_wp_feed_show_num_new = ($options["hk_wp_feed_show_num_new"] != "")?$options["hk_wp_feed_show_num_new"]:"";
+	$hk_fix_timezone = ($options["hk_fix_timezone"] != "")?$options["hk_fix_timezone"]:"";
 	
 	
 	$hide_updated_date  = ($options["hide_updated_date"] != "")?true:false;
@@ -263,7 +297,12 @@ function hk_wp_feed_update($widgetid) {
 				else {
 					$count++;
 				}
-				$time = strtotime($item->pubDate);
+				if ($hk_fix_timezone) {
+					$time = strtotime(substr($item->pubDate,0,strrpos($item->pubDate, " ")));
+				}
+				else {
+					$time = strtotime($item->pubDate);
+				}
 				$nice_time = hk_nicedate($time);
 				if (!empty($item->modDate)) {
 					$modtime = strtotime($item->modDate);
