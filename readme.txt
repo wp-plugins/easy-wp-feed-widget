@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
-Simple widget to add a wordpress feed to your site. Settings for number of items to show, number of days the item is new, restrict to one or more categories and cron update to update feed cache.
+Simple widget to add a wordpress feed (or other feed) to your site. Settings for number of items to show, number of days the item is new, restrict to one or more categories and cron update to update feed cache.
 
 Contact Jonas Hjalmarsson, Hultsfreds kommun on Twitter @hjalmarsson for questions.
 
