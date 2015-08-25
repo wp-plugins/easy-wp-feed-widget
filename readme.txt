@@ -2,7 +2,7 @@
 Contributors: Jonas Hjalmarsson (Hultsfreds kommun)
 Tags: wordpress, feed, widget, rss
 Requires at least: 3.2
-Tested up to: 4.2.2
+Tested up to: 4.3
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -28,6 +28,9 @@ Drag and drop the widget to your widget-area in the Widgets section, all setting
 2. Sample of the widget on a website. (Style is not in widget)
 
 == Changelog ==
+
+= 1.2.1 =
+Bugfixes.
 
 = 1.2 =
 Added settings for Always show title.
